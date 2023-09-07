@@ -1,7 +1,7 @@
 import React from 'react';
 import './assetss/css/App.css';
 import 'bootstrap/dist/css/bootstrap.css';
-import {BrowserRouter as Router, Switch, Route} from 'react-router-dom'
+import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 function App(){
@@ -15,7 +15,7 @@ function App(){
             </Router>
 
         </React.Fragment>
-    )
+    );
 }
 
 export default App;
