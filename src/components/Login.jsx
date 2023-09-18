@@ -2,9 +2,14 @@ import React from "react";
 import '../assetss/css/Login.css';
 import logo from '../img/logo.png';
 import axios from 'axios';
-
+import {obtenerZona} from "../services/geocoding";
+import { DateTime } from "luxon";
 
 class Login extends React.Component{
+
+    constructor(props){
+        super(props);
+    }
 
     state ={
         form:{
@@ -15,39 +20,69 @@ class Login extends React.Component{
         errorMsg:""
     };
     
+    
     manejadorSubmit = async (e) => {
         e.preventDefault(); 
         try {
             const { username, password } = this.state.form;
             const url = "http://localhost:3200/api/usuario/login"; 
             
-            const response = await axios.post(url, { username, password });
+            const response = await axios.post(url, { username, password }); 
 
             if (response.data.exito) {
               
-                console.log("Autenticación exitosa");
-                const fechaHora = new Date().toISOString();
+                //console.log("Autenticación exitosa");
                 const dni = response.data.dni;
 
-                navigator.geolocation.getCurrentPosition((position) => {
-                const latitud = position.coords.latitude;
-                const longitud = position.coords.longitude;
+                if(dni == 111111111)
+                {
+                    this.props.history.push("/dashboard");
+                    return;
+                }
+                
+                const fechaHora = DateTime.now().setZone('America/Argentina/Buenos_Aires').minus({ hours: 3 }).toFormat('yyyy-MM-dd HH:mm:ss');
+                
 
-                const postData = {
-                    dni,
-                    fechaHora,
-                    latitud,
-                    longitud
-                };
-
-                axios.post("http://localhost:3200/api/registro", postData)
-                .then((secondResponse) => {
-                    console.log("Segunda solicitud POST exitosa", secondResponse.data);
-                })
-                .catch((error) => {
-                    console.error("Error en la segunda solicitud POST:", error);
-                });
-            });      
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    try {
+                      const latitud = position.coords.latitude;
+                      const longitud = position.coords.longitude;
+                      const apiKeyGeocoding = "6d42eadf81834451b066a77e172433a5";
+                  
+                      const zonaInicial = await obtenerZona(latitud, longitud, apiKeyGeocoding);
+                      const partes = zonaInicial.split(',');
+                      const zona = partes[partes.length - 2].trim();
+      
+                        
+                      const fechaHora = DateTime.now()
+                        .setZone('America/Argentina/Buenos_Aires')
+                        .minus({ hours: 3 })
+                        .toFormat('yyyy-MM-dd HH:mm:ss');
+                  
+                      const postData = {
+                        dni,
+                        fechaHora,
+                        latitud,
+                        longitud,
+                        zona
+                      };
+                  
+                      axios.post("http://localhost:3200/api/registro", postData)
+                        .then((secondResponse) => {
+                          console.log("Segunda solicitud POST exitosa", secondResponse.data);
+                          this.setState({
+                            error: false,
+                            errorMsg: ""
+                          });
+                          alert("Ubicación registrada correctamente");
+                        })
+                        .catch((error) => {
+                          console.error("Error en la segunda solicitud POST:", error);
+                        });
+                    } catch (error) {
+                      console.error("Error al obtener la zona:", error);
+                    }
+                  });
             } 
             else {
               
@@ -90,9 +125,13 @@ class Login extends React.Component{
                         <input type="text" id="login" className="fadeIn second" name="username" placeholder="Usuario" onChange={this.manejadorChange} />
                         <input type="password" id="password" className="fadeIn third" name="password" placeholder="Password" onChange={this.manejadorChange}/>
                         <input type="submit" className="fadeIn fourth" value="Log In"/>
-                        </form>
-
+                    {this.state.error === true &&
+                        <div className="alert alert-danger" role="alert">
+                            {this.state.errorMsg}
+                        </div>
+                    }
                       
+                        </form>
                     </div>
                 </div>
             </React.Fragment>
