@@ -1,6 +1,7 @@
 import React from "react";
 import Header from "../template/Header";
 import axios from "axios";
+import L from "leaflet";
 
 class Dashboard extends React.Component{
     
@@ -14,9 +15,14 @@ class Dashboard extends React.Component{
         .then(response => {
         this.setState({
             registros: response.data.resultado
-        });
+            });
         });
     }
+
+    manejadorUbicacion = (latitud,longitud) =>{
+        const mapUrl = `https://www.openstreetmap.org/?mlat=${latitud}&mlon=${longitud}#map=15/${latitud}/${longitud}`;
+        window.open(mapUrl, "_blank");
+    };
 
     render(){
         return(
@@ -31,6 +37,7 @@ class Dashboard extends React.Component{
                             <th scope="col">Latitud</th>
                             <th scope="col">Longitud</th>
                             <th scope="col">Zona</th>
+                            <th scope="col"> Mapa</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -42,6 +49,11 @@ class Dashboard extends React.Component{
                                     <td>{value.latitud}</td>
                                     <td>{value.longitud}</td>
                                     <td>{value.zona}</td>
+                                    <td>
+                                        <button className="btnUbicacion" onClick={() => this.manejadorUbicacion(value.latitud, value.longitud)}>
+                                            Ver ubicacion
+                                        </button>
+                                    </td>
                                 </tr>
                             );
                         })}
